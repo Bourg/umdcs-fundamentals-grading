@@ -1,7 +1,7 @@
 require 'FileUtils'
 
-require_relative 'entities'
-require_relative 'logger'
+require 'entities'
+require 'logger'
 
 def do_distribute(args)
   # Determine the directory to read from

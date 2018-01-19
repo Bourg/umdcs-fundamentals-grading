@@ -1,4 +1,4 @@
-require_relative "common"
+require "common"
 
 class Graders
   # initialize : Array<Grader>
