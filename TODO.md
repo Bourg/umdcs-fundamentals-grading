@@ -1,0 +1,3 @@
+- Implement record file format for who received what submission
+- Make staff list read from config file
+- Add nice command line arguments
