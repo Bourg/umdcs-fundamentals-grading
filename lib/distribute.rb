@@ -1,18 +1,20 @@
 require 'FileUtils'
 
 require 'entities'
-require 'logger'
+require 'common/logger'
+
+include Entities
 
 def do_distribute(args)
   # Determine the directory to read from
   if args.size < 1 || !Dir.exist?(args[0])
-    log_fatal "First argument must be the directory containing submissions"
+    Common.log_fatal "First argument must be the directory containing submissions"
   end
   submissions_dir = args[0]
 
   # Determine the directory to write to
   if args.size < 2
-    log_fatal "Second argument must be a directory to output to"
+    Common.log_fatal "Second argument must be a directory to output to"
   end
 
   output_dir = args[1]
@@ -22,9 +24,9 @@ def do_distribute(args)
     answer = STDIN.readline.strip
     if answer =~ /^[yY](?:es)?$/
       rmd = FileUtils.rm_r(output_dir)
-      log_fatal "Couldn't remove the output directory" unless rmd
+      Common.log_fatal "Couldn't remove the output directory" unless rmd
     else
-      log_fatal "Please choose a different output directory or remove the current one"
+      Common.log_fatal "Please choose a different output directory or remove the current one"
     end
   end
 
@@ -54,10 +56,10 @@ def do_distribute(args)
         if submission_validation.success?
           submissions << submission
         else
-          log_warning "Found an invalid submission by #{submitter_id} at #{submission_dir}: #{submission_validation.value.inspect}"
+          Common.log_warning "Found an invalid submission by #{submitter_id} at #{submission_dir}: #{submission_validation.value.inspect}"
         end
       else
-        log_warning "The source subdirectory #{subdir} doesn't match the regex"
+        Common.log_warning "The source subdirectory #{subdir} doesn't match the regex"
       end
     end
   }
@@ -66,7 +68,7 @@ def do_distribute(args)
   # Attempt to assign submissions to graders
   assignments_result = graders.assign(submissions)
   if assignments_result.failure?
-    log_fatal "Failed to assign submissions to graders: #{assignments_result.value.inspect}"
+    Common.log_fatal "Failed to assign submissions to graders: #{assignments_result.value.inspect}"
   end
   assignments = assignments_result.value
 
@@ -89,10 +91,10 @@ def do_distribute(args)
     end
   }
 
-  log_output "Done! Report:"
-  log_output "\tTotal Submissions: #{submissions.size}"
-  log_output "\tGrader Distributions:"
+  Common.log_output "Done! Report:"
+  Common.log_output "\tTotal Submissions: #{submissions.size}"
+  Common.log_output "\tGrader Distributions:"
   assignments.each{|g, ss|
-    log_output "\t\t#{g.id} (workload: #{g.workload}): #{ss.size}"
+    Common.log_output "\t\t#{g.id} (workload: #{g.workload}): #{ss.size}"
   }
 end

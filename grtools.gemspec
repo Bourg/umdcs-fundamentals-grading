@@ -7,7 +7,7 @@ Gem::Specification.new do |s|
   s.homepage    = "http://bourg.me"
   s.authors     = ["Austin Bourgerie"]
   s.email       = 'abourg@cs.umd.edu'
-  s.files       = Dir.glob("lib/*")
+  s.files       = Dir.glob("lib/**/*")
   s.executables << "grtools"
   s.license     = "MIT"
 end
