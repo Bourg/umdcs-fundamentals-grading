@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 
+require 'sanity'
 require 'distribute'
 
 require 'common/logger'
@@ -10,7 +11,20 @@ config = Common::Config.load_from_disk
 if config.success?
   config = config.value
 else
-  log_fatal("Could not load configuration file: #{config.value}")
+  Common.log_fatal("Could not load configuration file: #{config.value}")
 end
 
-do_distribute config, ARGV
+if ARGV.length == 0 
+  # Todo better error / documentation
+  Common.log_fatal("Provide an action as the first argument")
+end
+
+command = ARGV[0].downcase
+subargs = ARGV[1..-1]
+
+# TODO restructure to be more independent of ARGV
+if command == "sanity"
+  do_sanity "sanity", subargs
+elsif command == "distribute"
+  do_distribute config, subargs
+end

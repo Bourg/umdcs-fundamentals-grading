@@ -3,13 +3,14 @@ require 'fileutils'
 require 'entities'
 require 'common/record'
 require 'common/logger'
+require 'common/fileops'
 
 include Entities
 
 $RECORD_FILENAME = "record.csv"
 
 def do_distribute(config, args)
-  log_failure "Missing arguments" unless config && args
+  Common.log_failure "Missing arguments" unless config && args
 
   # Determine the directory to read from
   if args.size < 1 || !Dir.exist?(args[0])
@@ -24,16 +25,7 @@ def do_distribute(config, args)
 
   output_dir = args[1]
 
-  if Dir.exist?(output_dir)
-    print "The directory #{output_dir} already exists - would you like to overwrite? (Y/n): "
-    answer = STDIN.readline.strip
-    if answer =~ /^[yY](?:es)?$/
-      rmd = FileUtils.rm_r(output_dir)
-      Common.log_fatal "Couldn't remove the output directory" unless rmd
-    else
-      Common.log_fatal "Please choose a different output directory or remove the current one"
-    end
-  end
+  Common::FileOps.mkdir_prompt(output_dir)
 
   # Identify submissions in the input directory
   submissions = []
@@ -68,7 +60,6 @@ def do_distribute(config, args)
   assignments = assignments_result.value
 
   # Perform filesystem operations to construct grading packages
-  FileUtils.mkdir(output_dir)
   assignments.each{|g, ss|
     grader_dir = File.join(output_dir, g.id)
     FileUtils.mkdir(grader_dir)
