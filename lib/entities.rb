@@ -1,6 +1,22 @@
 require 'common/result'
 
 module Entities
+  # Represents the entire set of mappings from graders to assignments
+  class Assignments
+    def initialize(init_mapping = nil)
+      init_mapping = {} unless init_mapping
+      @assignments = init_mapping
+    end
+
+    def each
+      @assignments.each{|g, ss| yield g, ss}
+    end
+
+    def to_record_csv
+      @assignments.map{|g, ss| ss.map{|s| "#{s.student_id},#{g.id}\n"}}.flatten.reduce(:+).strip
+    end
+  end
+
   class Graders
     # initialize : Array<Grader>
     def initialize(graders)
@@ -58,7 +74,7 @@ module Entities
         end
       }
 
-      return Common::Result.success(result)
+      return Common::Result.success(Assignments.new(result))
     end
 
     # validate : () -> Result

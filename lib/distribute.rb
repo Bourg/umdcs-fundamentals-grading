@@ -1,9 +1,12 @@
 require 'FileUtils'
 
 require 'entities'
+require 'common/record'
 require 'common/logger'
 
 include Entities
+
+$RECORD_FILENAME = "record.csv"
 
 def do_distribute(args)
   # Determine the directory to read from
@@ -83,9 +86,13 @@ def do_distribute(args)
     }
   }
 
+  File.open(File.join(output_dir, $RECORD_FILENAME), "w"){|record_file|
+    record_file.write(assignments.to_record_csv)
+  }
+
   Dir.chdir(output_dir)
   Dir.foreach("."){|subdir|
-    unless subdir == "." || subdir == ".."
+    unless subdir == "." || subdir == ".." || !File.directory?(subdir)
       `tar czf #{subdir}-submissions.tar.gz #{subdir}`
       FileUtils.rm_r(subdir)
     end
