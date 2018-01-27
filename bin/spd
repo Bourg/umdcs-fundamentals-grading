@@ -1,4 +1,16 @@
 #!/usr/bin/env ruby
 
 require 'distribute'
-do_distribute ARGV
+
+require 'common/logger'
+require 'common/config'
+
+# Load the configuration file
+config = Common::Config.load_from_disk
+if config.success?
+  config = config.value
+else
+  log_fatal("Could not load configuration file: #{config.value}")
+end
+
+do_distribute config, ARGV

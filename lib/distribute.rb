@@ -1,4 +1,4 @@
-require 'FileUtils'
+require 'fileutils'
 
 require 'entities'
 require 'common/record'
@@ -8,7 +8,9 @@ include Entities
 
 $RECORD_FILENAME = "record.csv"
 
-def do_distribute(args)
+def do_distribute(config, args)
+  log_failure "Missing arguments" unless config && args
+
   # Determine the directory to read from
   if args.size < 1 || !Dir.exist?(args[0])
     Common.log_fatal "First argument must be the directory containing submissions"
@@ -32,16 +34,6 @@ def do_distribute(args)
       Common.log_fatal "Please choose a different output directory or remove the current one"
     end
   end
-
-  # Determine the staff list
-  # TODO make this procedural from an input file / allow simple even split mode
-  graders = Graders.new([
-    Grader.new("abourg@cs.umd.edu", 1),
-    Grader.new("camoy@cs.umd.edu", 1),
-    Grader.new("jack@cs.umd.edu", 1),
-    Grader.new("tharris@cs.umd.edu", 1),
-    Grader.new("sbarham@cs.umd.edu", 1.8),
-    Grader.new("rzehrung@cs.umd.edu", 1)].shuffle)
 
   # Identify submissions in the input directory
   submissions = []
@@ -69,7 +61,7 @@ def do_distribute(args)
   submissions.sort_by!(&:student_id)
 
   # Attempt to assign submissions to graders
-  assignments_result = graders.assign(submissions)
+  assignments_result = config.graders.assign(submissions)
   if assignments_result.failure?
     Common.log_fatal "Failed to assign submissions to graders: #{assignments_result.value.inspect}"
   end
