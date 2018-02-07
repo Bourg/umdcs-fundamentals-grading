@@ -43,10 +43,10 @@ def do_distribute(config, args)
         if submission_validation.success?
           submissions << submission
         else
-          Common.log_warning "Found an invalid submission by #{submitter_id} at #{submission_dir}: #{submission_validation.value.inspect}"
+          Common.log_warning "Found an invalid submission by #{submitter_id} at #{submission_dir}: #{submission_validation.value.inspect}. Omitting."
         end
       else
-        Common.log_warning "The source subdirectory #{subdir} doesn't match the regex"
+        Common.log_warning "The source subdirectory #{subdir} doesn't match the regex. Omitting."
       end
     end
   }
