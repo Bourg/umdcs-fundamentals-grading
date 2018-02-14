@@ -1,22 +1,16 @@
 #!/usr/bin/env ruby
 
-require 'sanity'
-require 'distribute'
+require 'ops/sanity'
+require 'ops/distribute'
 
 require 'common/logger'
-require 'common/config'
+require 'config/distribution_config'
 
-# Load the configuration file
-config = Common::Config.load_from_disk
-if config.success?
-  config = config.value
-else
-  Common.log_fatal("Could not load configuration file: #{config.value}")
-end
+$CONFIG_LOCATION = "config"
 
-if ARGV.length == 0 
+if ARGV.length == 0
   # Todo better error / documentation
-  Common.log_fatal("Provide an action as the first argument")
+  SPD::Common::Logger.log_fatal("Provide an action as the first argument")
 end
 
 command = ARGV[0].downcase
@@ -26,5 +20,17 @@ subargs = ARGV[1..-1]
 if command == "sanity"
   do_sanity "sanity", subargs
 elsif command == "distribute"
-  do_distribute config, subargs
+  # Load the configuration file
+  config = SPD::Config::DistributionConfig.load_from_disk($CONFIG_LOCATION)
+  if config.failure?
+    SPD::Common::Logger.log_fatal("Could not load configuration file: #{config.value}")
+  end
+  config = config.value
+
+  # Determine the directory to read from
+  unless Dir.exist?(config.input_dir)
+    Common.log_fatal "First argument must be the directory containing submissions"
+  end
+
+  SPD::Ops.do_distribute(config)
 end
