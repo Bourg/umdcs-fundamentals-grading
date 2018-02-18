@@ -27,8 +27,8 @@ module SPD
         else
           @graders = graders.clone.freeze
         end
-        @input_dir = input_dir.clone.freeze
-        @output_dir = output_dir.clone.freeze
+        @input_dir = input_dir
+        @output_dir = output_dir
 
         options = {} unless options
         @options = options.clone.freeze
