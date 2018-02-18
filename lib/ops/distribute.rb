@@ -36,10 +36,10 @@ module SPD
             if submission_validation.success?
               submissions << submission
             else
-              Common.log_warning "Found an invalid submission by #{submitter_id} at #{submission_dir}: #{submission_validation.value.inspect}. Omitting."
+              Logger.log_warning "Found an invalid submission by #{submitter_id} at #{submission_dir}: #{submission_validation.value.inspect}. Omitting."
             end
           else
-            Common.log_warning "The source subdirectory #{subdir} doesn't match the regex. Omitting."
+            Logger.log_warning "The source subdirectory #{subdir} doesn't match the regex. Omitting."
           end
         end
       }
@@ -49,7 +49,7 @@ module SPD
       # Attempt to assign submissions to graders
       assignments_result = config.graders.assign(submissions)
       if assignments_result.failure?
-        Common.log_fatal "Failed to assign submissions to graders: #{assignments_result.value.inspect}"
+        Logger.log_fatal "Failed to assign submissions to graders: #{assignments_result.value.inspect}"
       end
       assignments = assignments_result.value
 
