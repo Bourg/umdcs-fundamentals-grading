@@ -2,9 +2,8 @@
 module SPD
   module Entities
     class Assignments
-      def initialize(init_mapping = nil)
-        init_mapping = {} unless init_mapping
-        @assignments = init_mapping
+      def initialize(assignments)
+        @assignments = assignments.to_h.clone.freeze
       end
 
       def each
@@ -12,7 +11,11 @@ module SPD
       end
 
       def to_record_csv
-        @assignments.map {|g, ss| ss.map {|s| "#{s.student_id},#{g.id}\n"}}.flatten.reduce(:+).strip
+        @assignments
+            .map {|g, ss| ss.map {|s| "#{s.student_id}, #{g.id}\n"}}
+            .flatten
+            .reduce(:+)
+            .strip
       end
     end
   end

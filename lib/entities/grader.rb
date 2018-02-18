@@ -1,27 +1,26 @@
 module SPD
   module Entities
     class Grader
-      attr_reader :id, :workload
+      attr_reader :id, :email, :workload
 
       # Create a new grader by email and workload modifier
-      # id may be an email or any other piece of identifying information
-      def initialize(id, workload = 1)
-        # Extract the username from an email address if an email is given
-        if id =~ /^(.+)@.+\..+$/
-          @id = $1
-        else
-          @id = id
+      def initialize(email, workload = 1)
+        email = email.to_s
+        workload = workload.to_f
+
+        if email !~ /^(.+)@.+\..+$/
+          raise "Grader email address '#{email}' is malformed"
+        elsif workload < 0
+          raise "Grader workload #{workload} is invalid"
         end
 
-        @workload = workload.to_f
-      end
-
-      def valid?
-        id && !id.empty? && workload && workload >= 0
+        @id = $1
+        @email = email
+        @workload = workload
       end
 
       def active?
-        workload > 0
+        @workload > 0
       end
 
       # min_submissions : Float Integer -> Integer

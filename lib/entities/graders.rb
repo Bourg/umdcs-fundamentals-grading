@@ -9,7 +9,7 @@ module SPD
 
       # initialize : Array<Grader>
       def initialize(graders)
-        @graders = graders
+        @graders = graders.to_a.clone.freeze
       end
 
       # assign : Array<UngradedSubmission> -> Result
@@ -69,16 +69,10 @@ module SPD
       # validate : () -> Result
       # Returns a result where failure contains one of the following:
       # - [:no_workload]
-      # - [:invalid_graders, Array<Graders>]
       # Success contains nil
       def validate
-        return Common::Result.failure([:no_workload]) unless @graders
-
-        invalids = @graders.reject(&:valid?)
-        return Result.failure([:invalid_graders, invalids]) unless invalids.empty?
-
+        return Result.failure([:no_workload]) unless @graders
         return Result.failure([:no_workload]) unless total_workload > 0
-
         return Result.success
       end
 
