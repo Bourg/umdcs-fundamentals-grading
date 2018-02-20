@@ -1,12 +1,14 @@
-require "common/result"
-require "entities/grader"
-require "entities/graders"
+require 'common/result'
+require 'entities/grader'
+require 'entities/graders'
+require 'config/loadable_by_eval'
 
 module SPD
   module Config
     class DistributionConfig
       include SPD::Common
       include SPD::Entities
+      extend SPD::Config::LoadableByEval
 
       attr_reader :graders, :input_dir, :output_dir, :options
 
@@ -34,34 +36,8 @@ module SPD
         @options = options.clone.freeze
       end
 
-      # TODO make this configurable
       def submission_dirname_regex
         /^(\w+)__\d+$/
-      end
-
-      # load_from_disk : -> Config
-      # Loads the config file from disk at the requested path
-      # On success, returns the Config object defined at that path
-      # On failure, returns one of the following:
-      # - [:config_missing, <path>] when the path set does not exist
-      # - [:config_exception, <exception>] when loading raises an exception
-      # - [:config_type, <Class>] when evaluation doesn't yield a Config object
-      def self.load_from_disk(path)
-        if File.exist?(path)
-          begin
-            config = Kernel.eval(IO.read(path))
-
-            if config.class == DistributionConfig
-              return Result.success(config)
-            else
-              return Result.failure([:config_type, config.class])
-            end
-          rescue Exception => e
-            return Result.failure([:config_exception, e])
-          end
-        else
-          return Result.failure([:config_missing, path])
-        end
       end
     end
   end
