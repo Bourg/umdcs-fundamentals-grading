@@ -1,3 +1,4 @@
-- Implement record file format for who received what submission
-- Make staff list read from config file
-- Add nice command line arguments
+- Generalize command line interactions
+- Handle manual intervention cases
+- Create proper configuration system using TOML
+- Clean and document code

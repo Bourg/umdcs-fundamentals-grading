@@ -8,7 +8,7 @@ CANON_DIRNAME = 'canon'
 
 def do_sanity(output_dir, expected_files)
   # Create the directory structure
-  Common::FileOps.mkdir_prompt(output_dir)
+  SPD::Common::FileOps.mkdir_prompt(output_dir)
   Dir.chdir(output_dir)
   Dir.mkdir(SETUP_DIRNAME)
   Dir.mkdir(CANON_DIRNAME)
@@ -16,14 +16,16 @@ def do_sanity(output_dir, expected_files)
   # Create test files and canonical files for each expected file
   fuzzed_filenames = []
   expected_files.each{|expected_file|
-    fuzzed_filename = "#{expected_file}_exists"
+    fuzzed_filename = "#{File.basename(expected_file)}_exists"
     fuzzed_filenames << fuzzed_filename
 
     File.open(File.join(SETUP_DIRNAME, fuzzed_filename), "w"){|f|
       f.write "#!/bin/bash\nls #{expected_file}"
     }
 
-    FileUtils.touch(File.join(CANON_DIRNAME, expected_file))
+    filepath = File.join(CANON_DIRNAME, expected_file)
+    FileUtils.mkpath(File.dirname(filepath))
+    FileUtils.touch(filepath)
   }
 
   # Create a test config file for the submit server
