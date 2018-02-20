@@ -1,19 +1,25 @@
 require 'common/logger'
+require 'common/result'
 
 module SPD
   module Common
     module FileOps
+      include SPD::Common
+
       def self.mkdir_prompt(dir)
         if Dir.exist?(dir)
-          print "The directory #{dir} already exists - would you like to overwrite? (Y/n): "
+          print "The directory #{dir} already exists - would you like to overwrite it?\n[(y)es/(n)o/(s)hare]: "
           answer = STDIN.readline.strip
 
           if answer =~ /^[yY](?:es)?$/
             rmd = FileUtils.rm_r(dir)
 
-            Common.log_fatal "Couldn't remove the directory" unless rmd
+            Logger.log_fatal "Couldn't remove the directory" unless rmd
+          elsif answer =~ /^[sS](?:hare)?$/
+            Logger.log_warning('Sharing space with existing directory')
+            return true
           else
-            Common.log_fatal "Please choose a different directory or remove the current choice manually"
+            Logger.log_fatal "Please choose a different directory or remove the current choice manually"
           end
         end
 

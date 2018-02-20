@@ -1,4 +1,5 @@
 require 'fileutils'
+require 'digest'
 require 'common/fileops'
 require 'common/logger'
 require 'entities/graded_submission'
@@ -11,20 +12,23 @@ module SPD
 
       def initialize(config)
         @config = config
+        @digester = Digest::MD5.new
       end
 
       def do_ingest
+        FileOps.mkdir_prompt(@config.output_dir)
+
         if Dir.exist?(@config.input_dir)
           csv_lines = FileOps.subdirs_of(@config.input_dir)
                           .map {|subdir| ingest_one_interactive(subdir)}
                           .reject(&:nil?)
-                          .flat_map {|graded| graded.to_csv_lines(@config.assignment_name)}
+                          .flat_map {|graded| graded.to_csv_lines(@config.course_url, @config.assignment_name)}
 
           File.open(@config.output_csv, 'w') {|output_csv|
             csv_lines.each {|csv_line| output_csv.puts(csv_line)}
           }
 
-          Logger.log_output('Success...?')
+          Logger.log_output('Success!')
         else
           Logger.log_fatal("Nonexistent input directory '#{@config.input_dir}'")
         end
@@ -109,7 +113,27 @@ module SPD
           Logger.log_fatal 'Unsupported - students and/or points failed to extract'
         end
 
-        return subpart.to_graded(students, points, filepath)
+        output_filepath = create_returnable_file(filepath)
+
+        return subpart.to_graded(students, points, output_filepath)
+      end
+
+      def create_returnable_file(filepath)
+        unless File.exist?(filepath)
+          Logger.log_fatal("There is no file to pack at #{filepath}")
+        end
+
+        @digester.reset
+        @digester << IO.read(filepath)
+        output_filepath = File.join(@config.output_dir, @digester.hexdigest)
+        @digester.reset
+
+        if File.exist?(output_filepath)
+          Logger.log_fatal("Output file collision! Input '#{filepath}' hash collided with output '#{output_filepath}'!")
+        end
+
+        FileUtils.cp(filepath, output_filepath)
+        return output_filepath
       end
     end
   end
