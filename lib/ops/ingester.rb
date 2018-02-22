@@ -80,7 +80,7 @@ module SPD
             Logger.log_fatal 'Unsupported - multiple possible matches for a subpart'
           else
             # TODO the file is missing in the directory
-            Logger.log_fatal 'Unsupported - no matches for a subpart filename'
+            Logger.log_fatal "Unsupported - no matches for a subpart filename in root #{submission_root}"
           end
         else
           # TODO the path to the file is missing
@@ -98,14 +98,14 @@ module SPD
           students = [$1]
           students << $2 if $2
         else
-          Logger.log_warning("Failed to extract student IDs from #{filepath}")
+          Logger.log_warning("Failed to extract student IDs from #{filepath} using regexp /#{@config.students_regexp.source}/")
         end
 
 
         if contents =~ @config.grade_regexp
           points = $1.to_i
         else
-          Logger.log_warning("Failed to extract scores from #{filepath}")
+          Logger.log_warning("Failed to extract scores from #{filepath} using regexp /#{@config.grade_regexp.source}/")
         end
 
         unless students && points
@@ -125,7 +125,7 @@ module SPD
 
         @digester.reset
         @digester << IO.read(filepath)
-        output_filepath = File.join(@config.output_dir, @digester.hexdigest)
+        output_filepath = File.join(@config.output_dir, @digester.hexdigest + File.extname(filepath))
         @digester.reset
 
         if File.exist?(output_filepath)

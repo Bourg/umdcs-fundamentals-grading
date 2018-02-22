@@ -2,3 +2,4 @@
 - Handle manual intervention cases
 - Create proper configuration system using TOML
 - Clean and document code
+- Automate removal of files that kill Gmail (i.e. jars)

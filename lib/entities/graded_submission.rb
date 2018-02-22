@@ -13,12 +13,13 @@ module SPD
 
       def to_csv_lines(course_url, assignment_name)
         webpage_paths = @filepaths.map {|p|
-          URI.join(course_url, File.basename(p)).to_s
+          #TODO THIS BREAKS ON WINDOWS BECAUSE \\
+          File.join(course_url, assignment_name, File.basename(p)).to_s
         }.join('\n')
 
         @students.map {|student|
 
-          "#{student},#{assignment_name},#{@total_score},#{webpage_paths}"
+          "#{student},#{assignment_name},#{@total_score},\"#{webpage_paths}\""
         }
       end
     end

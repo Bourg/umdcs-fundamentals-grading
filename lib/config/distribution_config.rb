@@ -36,6 +36,22 @@ module SPD
         @options = options.clone.freeze
       end
 
+      def send_mail?
+        return !!@options[:mail]
+      end
+
+      def mail_sender
+        send_mail? && @options[:mail][:sender]
+      end
+
+      def mail_subject
+        send_mail? && @options[:mail][:subject]
+      end
+
+      def mail_body
+        send_mail? && @options[:mail][:body]
+      end
+
       def submission_dirname_regex
         /^(\w+)__\d+$/
       end

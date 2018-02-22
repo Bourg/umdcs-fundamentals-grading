@@ -3,6 +3,7 @@ require 'fileutils'
 require 'common/fileops'
 require 'common/logger'
 require 'entities/ungraded_submission'
+require 'common/mailer'
 
 $RECORD_FILENAME = "record.csv"
 
@@ -70,12 +71,33 @@ module SPD
 
       # Archive each grader's folder into a tarball and clean up
       Dir.chdir(config.output_dir)
-      Dir.foreach(".") {|subdir|
+      Dir.foreach('.') {|subdir|
         unless subdir == "." || subdir == ".." || !File.directory?(subdir)
-          `tar czf #{subdir}-submissions.tar.gz #{subdir}`
+          output_filename = "#{subdir}-submissions.tar.gz"
+          `tar czf #{output_filename} #{subdir}`
+
+          grader = config.graders.by_id(subdir)
+          if grader
+            grader.archive_path = File.join(config.output_dir, output_filename)
+          else
+            Logger.log_fatal("No Grader object match for subdir #{subdir} - this should not happen!")
+          end
+
           FileUtils.rm_r(subdir)
         end
       }
+      Dir.chdir('..')
+
+      # Send mail if it was requested
+      if config.send_mail?
+        Logger.log_output("Attempting to send mail...")
+        # TODO make this less crap
+        mailer = Mailer.new(config.mail_sender, config.mail_subject, config.mail_body)
+
+        config.graders.graders.select(&:archive_path).each{|grader|
+          mailer.send(grader.email, grader.archive_path)
+        }
+      end
 
       # Print a final report
       Logger.log_output "Done! Report:"

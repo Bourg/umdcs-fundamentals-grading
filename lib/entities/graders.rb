@@ -7,9 +7,19 @@ module SPD
       include SPD::Common
       include SPD::Entities
 
+      attr_reader :graders
+
       # initialize : Array<Grader>
       def initialize(graders)
         @graders = graders.to_a.clone.freeze
+      end
+
+      def by_id(id)
+        @graders.each{|grader|
+          return grader if grader.id == id
+        }
+
+        return nil
       end
 
       # assign : Array<UngradedSubmission> -> Result

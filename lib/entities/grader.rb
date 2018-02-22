@@ -2,6 +2,7 @@ module SPD
   module Entities
     class Grader
       attr_reader :id, :email, :workload
+      attr_accessor :archive_path
 
       # Create a new grader by email and workload modifier
       def initialize(email, workload = 1)
