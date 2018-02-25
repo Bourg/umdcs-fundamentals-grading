@@ -10,4 +10,6 @@ Gem::Specification.new do |s|
   s.files       = Dir.glob("lib/**/*")
   s.executables << "spd"
   s.license     = "MIT"
+
+  s.add_runtime_dependency 'thor', ['~> 0.20.0']
 end
