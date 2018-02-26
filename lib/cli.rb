@@ -30,7 +30,8 @@ module SPD
 
       Prereq.enforce_many [
                               GenericPrereq.new(files) {|files|
-                                "A setup must contain at least one file" if !files || files.empty? || files[0].empty?
+                                "A setup must contain at least one file" if !files || files.empty?
+                                "No files in a setup may have empty names" if files.any?(&:empty?)
                               }, UsableDirectory.new(output)]
 
       Sanity.do_sanity(output, files)

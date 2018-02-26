@@ -1,5 +1,6 @@
 require 'prereq/base_prereq'
 require 'fileutils'
+require 'tty-prompt'
 
 module SPD
   module Prereq
@@ -18,16 +19,18 @@ module SPD
           return
         end
 
-        print "The directory #{@dir} already exists - would you like to clear it?\n[(y)es/(n)o/(s)hare]: "
-        answer = STDIN.readline.strip
-
-        if answer =~ /^[yY](?:es)?$/
-          fail('Failed to delete directory') unless FileUtils.rm_r(@dir)
-          FileUtils.mkdir(@dir)
-        elsif answer =~ /^[sS](?:hare)?$/
-          Logger.log_warning('Sharing space with existing directory')
-        else
-          fail("Cannot proceed without consent to use the directory #{@dir}")
+        case TTY::Prompt.new.expand("The directory #{@dir} already exists - clear it?") do |q|
+          q.choice key: 'n', name: 'No', value: :no
+          q.choice key: 'y', name: 'Yes', value: :yes
+          q.choice key: 's', name: 'Share (use the directory without clearning)', value: :share
+        end
+          when :yes
+            fail('Failed to delete directory') unless FileUtils.rm_r(@dir)
+            FileUtils.mkdir(@dir)
+          when :no
+            fail("Cannot proceed without consent to use the directory #{@dir}")
+          when :share
+            Logger.log_warning('Sharing space with existing directory')
         end
       end
     end

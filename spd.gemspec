@@ -12,4 +12,5 @@ Gem::Specification.new do |s|
   s.license     = "MIT"
 
   s.add_runtime_dependency 'thor', ['~> 0.20.0']
+  s.add_runtime_dependency 'tty-prompt', ['~> 0.15.0']
 end
