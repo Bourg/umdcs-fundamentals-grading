@@ -5,6 +5,9 @@ require 'common/logger'
 require 'entities/ungraded_submission'
 require 'common/mailer'
 
+require 'prereq/directory_exists'
+require 'prereq/usable_directory'
+
 $RECORD_FILENAME = "record.csv"
 
 module SPD
@@ -12,23 +15,27 @@ module SPD
     class Distribute
       include SPD::Common
       include SPD::Entities
+      include SPD::Prereq
 
       # Perform the distribution task
       # Assume that the config has been validated
       def self.do_distribute(config)
+        $submission_dirname_regexp = /^(\w+)__\d+$/
+        $input_dir = 'submissions'
+        $output_dir = 'distributions'
 
-        # Ensure that there is a clean working directory to output to
-        FileOps.mkdir_prompt(config.output_dir)
+
+        Prereq.enforce_many([DirectoryExists.new($input_dir), UsableDirectory.new($output_dir)])
 
         # Identify submissions, construct corresponding entities and validate
         submissions = []
-        Dir.foreach(config.input_dir) {|subdir|
+        Dir.foreach($input_dir) {|subdir|
           unless subdir == '.' || subdir == '..'
             # If the subdirectory matches the expected format
-            if subdir =~ config.submission_dirname_regex
+            if subdir =~ $submission_dirname_regexp
               # Extract the submitter's UID
               submitter_id = $1
-              submission_dir = File.join(config.input_dir, subdir)
+              submission_dir = File.join($input_dir, subdir)
 
               # Construct and validate a submission object
               submission = UngradedSubmission.new(submitter_id, submission_dir)
@@ -57,7 +64,7 @@ module SPD
 
         # Construct file structure for grading packages
         assignments.each {|g, ss|
-          grader_dir = File.join(config.output_dir, g.id)
+          grader_dir = File.join($output_dir, g.id)
           FileUtils.mkdir(grader_dir)
 
           ss.each {|s|
@@ -66,12 +73,12 @@ module SPD
         }
 
         # Write the record file
-        File.open(File.join(config.output_dir, $RECORD_FILENAME), "w") {|record_file|
+        File.open(File.join($output_dir, $RECORD_FILENAME), "w") {|record_file|
           record_file.write(assignments.to_record_csv)
         }
 
         # Archive each grader's folder into a tarball and clean up
-        Dir.chdir(config.output_dir)
+        Dir.chdir($output_dir)
         Dir.foreach('.') {|subdir|
           unless subdir == "." || subdir == ".." || !File.directory?(subdir)
             output_filename = "#{subdir}-submissions.tar.gz"
@@ -79,7 +86,7 @@ module SPD
 
             grader = config.graders.by_id(subdir)
             if grader
-              grader.archive_path = File.join(config.output_dir, output_filename)
+              grader.archive_path = File.join($output_dir, output_filename)
             else
               Logger.log_fatal("No Grader object match for subdir #{subdir} - this should not happen!")
             end
@@ -89,6 +96,7 @@ module SPD
         }
         Dir.chdir('..')
 
+        <<-MAIL_LOGIC
         # Send mail if it was requested
         if config.send_mail?
           Logger.log_output("Attempting to send mail...")
@@ -99,6 +107,7 @@ module SPD
             mailer.send(grader.email, grader.archive_path)
           }
         end
+        MAIL_LOGIC
 
         # Print a final report
         Logger.log_output "Done! Report:"

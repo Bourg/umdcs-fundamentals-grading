@@ -11,6 +11,7 @@ Gem::Specification.new do |s|
   s.executables << "spd"
   s.license     = "MIT"
 
-  s.add_runtime_dependency 'thor', ['~> 0.20.0']
-  s.add_runtime_dependency 'tty-prompt', ['~> 0.15.0']
+  s.add_runtime_dependency 'thor', ['~> 0.20']
+  s.add_runtime_dependency 'tty-prompt', ['~> 0.15']
+  s.add_runtime_dependency 'toml-rb', ['~> 1.1']
 end

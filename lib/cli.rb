@@ -1,22 +1,17 @@
 require 'thor'
 
-require 'prereq/base_prereq'
-require 'prereq/usable_directory'
-require 'prereq/generic_prereq'
-
 require 'ops/sanity'
 require 'ops/distribute'
 require 'ops/ingester'
 
-require 'prereq/generic_prereq'
 require 'common/logger'
-require 'config/distribution_config'
+
+require 'config/global_config'
 require 'config/ingest_config'
 
 module SPD
   class CLI < Thor
     include SPD::Ops
-    include SPD::Prereq
 
     $config_location = 'config'
 
@@ -25,34 +20,14 @@ module SPD
     option :output, {:aliases => '-o', :type => :string, :default => 'sanity'}
 
     def sanity
-      output = options[:output]
-      files = options[:files]
-
-      Prereq.enforce_many [
-                              GenericPrereq.new(files) {|files|
-                                "A setup must contain at least one file" if !files || files.empty?
-                                "No files in a setup may have empty names" if files.any?(&:empty?)
-                              }, UsableDirectory.new(output)]
-
-      Sanity.do_sanity(output, files)
+      Sanity.do_sanity(options[:output], options[:files])
     end
 
     desc 'distribute', 'Distribute submissions to graders'
 
-    def distribute
-      # Load the configuration file
-      config = SPD::Config::DistributionConfig.load_from_disk($config_location)
-      if config.failure?
-        SPD::Common::Logger.log_fatal("Could not load configuration file: #{config.value}")
-      end
-      config = config.value
-
-      # Determine the directory to read from
-      unless Dir.exist?(config.input_dir)
-        Common.log_fatal "First argument must be the directory containing submissions"
-      end
-
-      SPD::Ops.do_distribute(config)
+    def distribute(config_path)
+      config = SPD::Config::GlobalConfig.load_from_file(config_path)
+      SPD::Ops::Distribute.do_distribute(config)
     end
 
     desc 'ingest', 'Interactively parse graded files to create uploadable CSV + redistributables'

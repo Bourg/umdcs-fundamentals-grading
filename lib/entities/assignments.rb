@@ -14,7 +14,7 @@ module SPD
         @assignments
             .map {|g, ss| ss.map {|s| "#{s.student_id}, #{g.id}\n"}}
             .flatten
-            .reduce(:+)
+            .reduce("", :+)
             .strip
       end
     end

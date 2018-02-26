@@ -3,13 +3,26 @@ require 'fileutils'
 
 require 'common/fileops'
 
+require 'prereq/base_prereq'
+require 'prereq/usable_directory'
+require 'prereq/generic_prereq'
+
 SETUP_DIRNAME = 'setup'
 CANON_DIRNAME = 'canon'
 
 module SPD
   module Ops
     class Sanity
+      include SPD::Prereq
+
       def self.do_sanity(output_dir, expected_files)
+
+        Prereq.enforce_many [
+                                GenericPrereq.new(expected_files) {|files|
+                                  "A setup must contain at least one file" if !files || files.empty?
+                                  "No files in a setup may have empty names" if files.any?(&:empty?)
+                                }, UsableDirectory.new(output_dir)]
+
         Dir.chdir(output_dir)
         Dir.mkdir(SETUP_DIRNAME)
         Dir.mkdir(CANON_DIRNAME)

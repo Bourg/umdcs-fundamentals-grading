@@ -5,23 +5,15 @@ module SPD
       attr_accessor :archive_path
 
       # Create a new grader by email and workload modifier
-      def initialize(email, workload = 1)
-        email = email.to_s
-        workload = workload.to_f
-
-        if email !~ /^(.+)@.+\..+$/
-          raise "Grader email address '#{email}' is malformed"
-        elsif workload < 0
-          raise "Grader workload #{workload} is invalid"
-        end
-
-        @id = $1
-        @email = email
-        @workload = workload
+      def initialize(id, workload, active, email = nil)
+        @id = id.to_s
+        @email = email.to_s
+        @workload = workload.to_f
+        @active = !!active
       end
 
       def active?
-        @workload > 0
+        @workload > 0 && @active
       end
 
       # min_submissions : Float Integer -> Integer
