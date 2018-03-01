@@ -34,7 +34,7 @@ module SPD
                                  .map {|subdir| ingest_one_interactive(subdir, File.join(INPUT_DIR, subdir))}
                                  .reject(&:nil?)
 
-        deduplicate_submissions(graded_submissions)
+        graded_submissions = deduplicate_submissions(graded_submissions)
 
         csv_lines = graded_submissions.flat_map {|graded| graded.to_csv_lines(@config.course_url,
                                                                               @config.assignment_name)}
@@ -122,6 +122,7 @@ module SPD
           Logger.log_fatal 'Unsupported - students and/or points failed to extract'
         end
 
+        # TODO this shouldn't necessarily happen if this is a duplicate submission, which isn't yet known here
         output_filepath = create_returnable_file(filepath)
 
         return subpart.to_graded(students, points, output_filepath)
