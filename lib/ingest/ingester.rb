@@ -1,5 +1,7 @@
 require 'fileutils'
 require 'digest'
+require 'csv'
+require 'date'
 
 require 'common/fileops'
 require 'common/logger'
@@ -18,6 +20,7 @@ module SPD
 
       INPUT_DIR = 'graded'
       OUTPUT_DIR = 'return'
+      SUBMISSION_DATA_CSV = 'submission_data.csv'
 
       def initialize(config)
         @config = config
@@ -27,11 +30,14 @@ module SPD
       def do_ingest
         enforce_prereqs
 
-        csv_lines = FileOps.subdirs_of(INPUT_DIR)
-                        .map {|subdir| ingest_one_interactive(File.join(INPUT_DIR, subdir))}
-                        .reject(&:nil?)
-                        .flat_map {|graded| graded.to_csv_lines(@config.course_url,
-                                                                @config.assignment_name)}
+        graded_submissions = FileOps.subdirs_of(INPUT_DIR)
+                                 .map {|subdir| ingest_one_interactive(subdir, File.join(INPUT_DIR, subdir))}
+                                 .reject(&:nil?)
+
+        deduplicate_submissions(graded_submissions)
+
+        csv_lines = graded_submissions.flat_map {|graded| graded.to_csv_lines(@config.course_url,
+                                                                              @config.assignment_name)}
 
         File.open(@config.output_csv, 'w') {|output_csv|
           csv_lines.each {|csv_line| output_csv.puts(csv_line)}
@@ -52,7 +58,7 @@ module SPD
       # Performs the interactive ingest process rooted in the requested directory
       # This involves locating the files and parsing grades/comments
       # If the whole submission is well-formed, there should be no interactive steps
-      def ingest_one_interactive(submission_root)
+      def ingest_one_interactive(submitter, submission_root)
         # For each subpart, attempt to locate the file and extract its data
         graded_subparts = @config.subparts.flat_map do |subpart|
           filepath = find_file_interactive(submission_root, subpart.path)
@@ -71,15 +77,7 @@ module SPD
           return nil
         end
 
-        # TODO better logic for finding student IDs
-        students = graded_subparts[0].students
-        total_score, filepaths = *graded_subparts.inject([0, []]) {|a, graded_subpart|
-          a[0] += graded_subpart.weighted_score
-          a[1] << graded_subpart.filepath
-          a
-        }
-
-        return GradedSubmission.new(students, total_score, filepaths)
+        return GradedSubmission.new(submitter, graded_subparts)
       end
 
       # find_file_interactive : String String -> String
@@ -147,6 +145,63 @@ module SPD
 
         FileUtils.cp(filepath, output_filepath)
         return output_filepath
+      end
+
+      # deduplicate_submissions : Array -> Array
+      # Given an array of GradedSubmissions, cross-reference it with the submission data CSV to remove duplicates
+      def deduplicate_submissions(submissions)
+        unless File.file? SUBMISSION_DATA_CSV
+          Logger.log_warning("There is no submission data CSV at path #{SUBMISSION_DATA_CSV} - cannot deduplicate")
+          Logger.log_warning("You can get the CSV under Utilities -> Print grades for ALL submissions in CSV format")
+          return submissions
+        end
+
+        begin
+          Logger.log_output('Reading data from submission data CSV...')
+          timestamps = CSV.read(SUBMISSION_DATA_CSV)[1..-1].map {|entry| [entry[0], entry[2].to_i]}.to_h
+        rescue
+          Logger.log_warning("Something went wrong while deduplicating submissions")
+          Logger.log_warning("Make sure #{SUBMISSION_DATA_CSV} is a valid CSV file")
+          return submissions
+        end
+
+        # Map each grouping of partnered submissions to the latest timestamped submission
+        # TODO this assumes that the latest submission had the names of both partners
+        # TODO a better solution may be to manually set the partners in this submission to match an aggregate
+        group_partner_submissions(submissions).map do |grouping|
+          sorted_submissions = grouping.sort_by {|s| -timestamps[s.submitter]}
+          real_submission = sorted_submissions[0]
+
+          if grouping.size != 1
+            Logger.log_warning("#{grouping.size} submissions found for #{real_submission.students.join(", ")} (keeping most recent):")
+
+            sorted_submissions.each  do |submission|
+              formatted_timestamp = Time.at(timestamps[submission.submitter] / 1000.0).strftime("on %B %e at %H:%M")
+              Logger.log_warning("\t#{submission.submitter} #{formatted_timestamp}")
+            end
+          end
+
+          real_submission
+        end
+      end
+
+      # group_partner_submissions : Array -> Array
+      # Given an array of GradedSubmissions, group them together by partnerships
+      def group_partner_submissions(submissions)
+        # Mapping from every partner (not just submitters) to their submissions
+        groupings = {}
+
+        # For each submission, unify existing submissions around these partners
+        submissions.each do |submission|
+          common_submissions = submission.students.inject([submission]) do |common_submissions, student|
+            common_submissions += groupings[student] if groupings[student]
+            common_submissions
+          end
+
+          submission.students.each {|student| groupings[student] = common_submissions}
+        end
+
+        groupings.values.uniq.map(&:uniq)
       end
     end
   end
