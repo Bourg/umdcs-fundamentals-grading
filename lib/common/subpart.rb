@@ -1,9 +1,9 @@
 require 'ingest/graded_subpart'
 
 module SPD
-  module Entities
+  module Common
     class Subpart
-      attr_reader :path, :regexp, :total, :weight
+      attr_reader :path, :total, :weight
 
       # path : The regular expression of the path from the submission root
       def initialize(path, total, weight = 1)

@@ -1,5 +1,5 @@
 module SPD
-  module Entities
+  module Ingest
     class GradedSubpart
       attr_reader :weighted_score, :students, :filepath
 

@@ -1,8 +1,7 @@
 module SPD
-  module Entities
+  module Distribute
     class Graders
       include SPD::Common
-      include SPD::Entities
 
       attr_reader :graders
 

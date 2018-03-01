@@ -1,5 +1,4 @@
-- Generalize command line interactions
 - Handle manual intervention cases
-- Create proper configuration system using TOML
+- Create separate library/DSL for hash validation
 - Clean and document code
 - Automate removal of files that kill Gmail (i.e. jars)

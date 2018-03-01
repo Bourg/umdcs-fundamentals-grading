@@ -12,7 +12,7 @@ require 'distribute/graders'
 module SPD
   module Config
     class GlobalConfig < BaseConfig
-      include SPD::Entities
+      include SPD::Distribute
       attr_reader :course_url, :graders
 
       $email_domain_regexp = /^\w+(?:\.\w+)+$/

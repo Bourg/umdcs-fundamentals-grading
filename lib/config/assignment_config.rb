@@ -1,5 +1,5 @@
 require 'config/base_config'
-require 'ingest/subpart'
+require 'common/subpart'
 
 module SPD
   module Config
@@ -14,14 +14,14 @@ module SPD
 
         @assignment_name = @config["assignment"]["name"]
         @subparts = @config["assignment"]["subparts"].map do |_, data|
-          SPD::Entities::Subpart.new(data['path'], data['points'], data['weight'])
+          SPD::Common::Subpart.new(data['path'], data['points'], data['weight'])
         end
         @students_regexp = Regexp.new(@config["regexp"]["students"])
         @grade_regexp = Regexp.new(@config["regexp"]["grade"])
       end
 
       def output_csv
-        "#{@name}.csv"
+        "#{@assignment_name}.csv"
       end
 
       private

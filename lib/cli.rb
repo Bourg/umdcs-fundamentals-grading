@@ -1,7 +1,7 @@
 require 'thor'
 
 require 'sanity/sanity'
-require 'distribute/distribute'
+require 'distribute/distributor'
 require 'ingest/ingester'
 
 require 'common/logger'
@@ -29,7 +29,7 @@ module SPD
     desc 'ingest', 'Interactively parse graded files to create uploadable CSV + redistributables'
 
     def ingest
-      Ops::Ingester.new(load_config).do_ingest
+      Ingest::Ingester.new(load_config).do_ingest
     end
 
     private

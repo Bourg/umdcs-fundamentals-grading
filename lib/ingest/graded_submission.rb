@@ -1,7 +1,7 @@
 require 'uri'
 
 module SPD
-  module Entities
+  module Ingest
     class GradedSubmission
       attr_reader :students, :total_score, :filepaths
 

@@ -1,7 +1,7 @@
 require 'common/logger'
 
 module SPD
-  module Common
+  module Distribute
     class Mailer
       include SPD::Common
 

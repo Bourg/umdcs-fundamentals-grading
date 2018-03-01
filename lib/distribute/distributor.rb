@@ -7,16 +7,16 @@ require 'prereq/base_prereq'
 require 'prereq/directory_exists'
 require 'prereq/usable_directory'
 
-RECORD_FILENAME = "record.csv"
-SUBMISSION_DIRNAME_REGEXP = /^(\w+)__\d+$/
-INPUT_DIR = 'submissions'
-OUTPUT_DIR = 'distributions'
-
 module SPD
   module Distribute
     class Distributor
       include SPD
       include SPD::Common
+
+      RECORD_FILENAME = "record.csv"
+      SUBMISSION_DIRNAME_REGEXP = /^(\w+)__\d+$/
+      INPUT_DIR = 'submissions'
+      OUTPUT_DIR = 'distributions'
 
       def initialize(config)
         @config = config
@@ -35,6 +35,8 @@ module SPD
         write_record_csv(assignments)
         log_results(assignments)
       end
+
+      private
 
       # enforce_prereqs : -> nil
       # Ensure that the input directory exists and the output directory is usable

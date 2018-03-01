@@ -1,5 +1,5 @@
 module SPD
-  module Entities
+  module Distribute
     class Grader
       attr_reader :id, :email, :workload
 
