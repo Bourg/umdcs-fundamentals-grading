@@ -2,3 +2,8 @@
 - Create separate library/DSL for hash validation
 - Clean and document code
 - Automate removal of files that kill Gmail (i.e. jars)
+- Implement per-file parse options
+- Have Racket files run through GRacket-stripping code at ingest
+- Add warnings for anomolies
+    - Mismatched partner names between files
+    - Points given higher than subpart points

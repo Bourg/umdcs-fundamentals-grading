@@ -19,7 +19,7 @@ module SPD
       end
 
       def to_graded(students, points, filepath)
-        SPD::Entities::GradedSubpart.new(students, points * @weight, filepath)
+        SPD::Ingest::GradedSubpart.new(students, points * @weight, filepath)
       end
     end
   end
