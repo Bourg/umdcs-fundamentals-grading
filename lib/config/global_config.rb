@@ -1,12 +1,13 @@
 require 'toml-rb'
 require 'tty-prompt'
-require 'prereq/file_exists'
 require 'uri'
 
-require 'entities/grader'
-require 'entities/graders'
-
 require 'config/base_config'
+
+require 'prereq/file_exists'
+
+require 'distribute/grader'
+require 'distribute/graders'
 
 module SPD
   module Config

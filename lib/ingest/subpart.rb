@@ -1,4 +1,4 @@
-require 'entities/graded_subpart'
+require 'ingest/graded_subpart'
 
 module SPD
   module Entities

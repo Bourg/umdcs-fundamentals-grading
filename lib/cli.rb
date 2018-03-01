@@ -1,20 +1,16 @@
 require 'thor'
 
-require 'ops/sanity'
-require 'ops/distribute'
-require 'ops/ingester'
+require 'sanity/sanity'
+require 'distribute/distribute'
+require 'ingest/ingester'
 
 require 'common/logger'
 
-require 'config/global_config'
-require 'config/assignment_config'
+require 'config/configuration'
 
 module SPD
   class CLI < Thor
     include SPD
-
-    $global_config_location = File.expand_path('~/.spd_global_config.toml')
-    $assignment_config_location = 'assignment_config.toml'
 
     desc 'sanity', 'Create a testing setup that checks for expected files'
     option :files, {:required => true, :aliases => '-f', :type => :array}
@@ -25,25 +21,21 @@ module SPD
     end
 
     desc 'distribute', 'Distribute submissions to graders'
-
+    option :do_mail, {:aliases => '-m', :type => :boolean, :default => false}
     def distribute
-      Ops::Distribute.do_distribute(load_global_config)
+      Distribute::Distributor.new(load_config).do_distribute(options[:do_mail])
     end
 
     desc 'ingest', 'Interactively parse graded files to create uploadable CSV + redistributables'
 
     def ingest
-      Ops::Ingester.new(load_global_config, load_assignment_config).do_ingest
+      Ops::Ingester.new(load_config).do_ingest
     end
 
     private
 
-    def load_global_config
-      Config::GlobalConfig.load_from_file($global_config_location)
-    end
-
-    def load_assignment_config
-      Config::AssignmentConfig.load_from_file($assignment_config_location)
+    def load_config
+      Config::Configuration.new($global_config_location, $assignment_config_location)
     end
   end
 end

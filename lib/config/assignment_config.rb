@@ -1,5 +1,5 @@
 require 'config/base_config'
-require 'entities/subpart'
+require 'ingest/subpart'
 
 module SPD
   module Config

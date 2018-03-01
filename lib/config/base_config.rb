@@ -1,3 +1,6 @@
+require 'toml-rb'
+require 'tty-prompt'
+
 module SPD
   module Config
     class BaseConfig

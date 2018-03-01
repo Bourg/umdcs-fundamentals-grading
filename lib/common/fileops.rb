@@ -1,34 +1,20 @@
-require 'common/logger'
-require 'common/result'
-
 module SPD
   module Common
     module FileOps
-      include SPD::Common
+      # subdirs_of : String Regexp -> Array<String>
+      # Collects the directory names of all child directories whose names match the given pattern
+      def self.subdirs_of(dir, pattern = nil)
+        subdirs = Dir.entries(dir)
+                     .reject {|subdir| subdir == '.' || subdir == '..'}
+                     .select {|subdir| Dir.exist? File.join(dir, subdir)}
 
-      def self.eval_file(path, expected = Object)
-        if File.exist?(path)
-          begin
-            config = Kernel.eval(IO.read(path))
-
-            if config.is_a?(expected)
-              return Result.success(config)
-            else
-              return Result.failure([:config_type, config.class])
-            end
-          rescue Exception => e
-            return Result.failure([:config_exception, e])
-          end
-        else
-          return Result.failure([:config_missing, path])
+        # If a pattern is given, coerce it into a regexp and filter subdir names
+        if pattern
+          pattern = Regexp.new(pattern) unless pattern.is_a? Regexp
+          subdirs.select! {|subdir| subdir =~ pattern}
         end
-      end
 
-      def self.subdirs_of(dir)
-        Dir.entries(dir)
-            .reject {|d| d == '.' || d == '..'}
-            .map {|subdir| File.join(dir, subdir)}
-            .select {|path| Dir.exist?(path)}
+        subdirs
       end
     end
   end

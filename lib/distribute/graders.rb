@@ -1,5 +1,4 @@
 require 'common/result'
-require 'entities/assignments'
 
 module SPD
   module Entities
@@ -22,19 +21,11 @@ module SPD
         return nil
       end
 
-      # assign : Array<UngradedSubmission> -> Result
-      # Success contains assignment of submissions to graders weighted by workload
-      # Failure contains same results as the validate method, or additionally:
-      # - [:invalid_submissions, Array<UngradedSubmission>]
+      # assign : Array -> Hash or Nil
+      # Creates a mapping from each Grader to an Array (subset of input) in accordance with workloads
+      # Returns nil if the total workload isn't positive
       def assign(submissions)
-
-        # Perform validation on graders and return failure if it occures
-        validation_graders = validate
-        return validation_graders if validation_graders.failure?
-
-        # Perform validation on submissions, assuming they aren't null
-        invalid_submissions = submissions.map(&:validate).select(&:failure?)
-        return Result.failure([:invalid_submissions, invalid_submissions]) unless invalid_submissions.empty?
+        return nil if total_workload <= 0
 
         # At this point, assume the graders and submissions are both valid, i.e.:
         # - Non-zero number of identified graders with a net positive workload
@@ -73,17 +64,7 @@ module SPD
           end
         }
 
-        return Result.success(Assignments.new(result))
-      end
-
-      # validate : () -> Result
-      # Returns a result where failure contains one of the following:
-      # - [:no_workload]
-      # Success contains nil
-      def validate
-        return Result.failure([:no_workload]) unless @graders
-        return Result.failure([:no_workload]) unless total_workload > 0
-        return Result.success
+        result
       end
 
       # total_workload : () -> Float
