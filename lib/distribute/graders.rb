@@ -1,5 +1,3 @@
-require 'common/result'
-
 module SPD
   module Entities
     class Graders
