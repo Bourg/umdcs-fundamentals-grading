@@ -6,55 +6,40 @@ require 'uri'
 require 'entities/grader'
 require 'entities/graders'
 
+require 'config/base_config'
+
 module SPD
   module Config
-    class GlobalConfig
+    class GlobalConfig < BaseConfig
       include SPD::Entities
-
-      private_class_method :new
       attr_reader :course_url, :graders
 
-      $non_grader_subsections = ["email_domain"]
       $email_domain_regexp = /^\w+(?:\.\w+)+$/
 
       def initialize(path)
-        # Attempt to load
-        if File.file?(path)
-          config = TomlRB.load_file(path)
-        else
-          config = {}
+        super(path) do |config|
+          validate_course config
+          validate_graders config
+          validate_mailing config
         end
-
-        @p = TTY::Prompt.new
-        @config = config
-
-        validate_course
-        validate_graders
-        validate_mailing
-
-        File.write(path, TomlRB.dump(@config))
 
         # TODO reintegrate email addresses
         #email_domain = config["mailing"]["email_domain"]
+        #@sender_email = config["mailing"]["sender"]
 
-        @course_url = config["url"]
-        @graders = Graders.new(select_actual_graders(config["graders"]).to_a.map do |g|
+        @course_url = config["course"]["url"]
+        @graders = Graders.new(config["graders"].to_a.map do |g|
           grader_id = g[0]
           properties = g[1]
 
           Grader.new(grader_id, properties["workload"], properties["active"])
         end)
-        @sender_email = config["mailing"]["sender"]
-      end
-
-      def self.load_from_file(path)
-        new(path)
       end
 
       private
 
-      def validate_course
-        descend(@config, "course") do |course|
+      def validate_course(config)
+        descend(config, "course") do |course|
           descend_value(course, "url") do |url|
             unless url =~ URI.regexp
               url = @p.ask("What is the course webpage's base URL?", required: true) do |q|
@@ -67,8 +52,8 @@ module SPD
         end
       end
 
-      def validate_graders
-        descend(@config, "graders") do |graders|
+      def validate_graders(config)
+        descend(config, "graders") do |graders|
           # Logic: If there are no graders, run the configuration process for N graders
           #        If there is at least one grader, run the validation process on those graders
           if graders.empty?
@@ -112,8 +97,8 @@ module SPD
         properties
       end
 
-      def validate_mailing
-        descend(@config, "mailing") do |mailing|
+      def validate_mailing(config)
+        descend(config, "mailing") do |mailing|
           descend_value(mailing, "email_domain") do |email_domain|
             unless email_domain =~ $email_domain_regexp
               email_domain = @p.ask("What is the default email domain for graders?", required: true) {|q|
@@ -132,22 +117,6 @@ module SPD
             sender_email
           end
         end
-      end
-
-      def descend(hash, key)
-        sub = hash.fetch(key, {})
-        sub = {} unless sub.is_a? Hash
-
-        yield sub
-        hash[key] = sub
-      end
-
-      def descend_value(hash, key)
-        hash[key] = yield hash[key]
-      end
-
-      def select_actual_graders(graders_section)
-        graders_section.reject {|grader_id| $non_grader_subsections.include? grader_id}
       end
     end
   end

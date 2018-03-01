@@ -6,11 +6,8 @@ module SPD
       attr_reader :path, :regexp, :total, :weight
 
       # path : The regular expression of the path from the submission root
-      # regex : The pattern for the file name from
-      def initialize(path, regexp, total, weight = 1)
+      def initialize(path, total, weight = 1)
         @path = path
-
-        @regexp = Regexp.new(regexp)
 
         total = total.to_i
         raise "Invalid total value #{total} for subpart" unless total > 0
